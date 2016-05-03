@@ -1,9 +1,16 @@
+/*
+
+					Implementação da Biblioteca auxiliar da GaVini <3   v1.0.0.0
+					Tem que revisar :)
+	
+*/
+
 //Pega a thread atual na lista de aptos 
 THREAD_t* current_thread() {
 	THREAD_t* p;
 	if(!setIterator(lstApto, threadAtualID))
 		return (THREAD_t*) GetAtIterator2(lstApto);
-	return NULL;
+	return NULL
 }	
 
 void cBlock() {
@@ -125,7 +132,6 @@ void free_context(ucontext_t* context){
 
 
 //Aloca um novo contexto
-
 ucontext_t* allocate_context()
 {
 	ucontext_t* context = (ucontext_t*) malloc (sizeof(ucontext_t));

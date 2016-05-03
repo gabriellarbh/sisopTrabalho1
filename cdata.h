@@ -1,5 +1,5 @@
 /*
- * cdata.h: arquivo de inclus„o de uso apenas na geraÁ„o da libpithread
+ * cdata.h: arquivo de inclus√£o de uso apenas na gera√ß√£o da libpithread
  *
  * Esse arquivo pode ser modificado. ENTRETANTO, deve ser utilizada a TCB fornecida.
  *
@@ -16,21 +16,23 @@
 #define SUCCESS 0
 #define ERROR -1
 
-/* N√O ALTERAR ESSA struct */
+/* N√ÉO ALTERAR ESSA struct */
 typedef struct s_TCB { 
 	int		tid; 		// identificador da thread
 	int		state;		// estado em que a thread se encontra
-					// 0: CriaÁ„o; 1: Apto; 2: ExecuÁ„o; 3: Bloqueado e 4: TÈrmino
-	ucontext_t 	context;	// contexto de execuÁ„o da thread (SP, PC, GPRs e recursos) 
+					// 0: Cria√ß√£o; 1: Apto; 2: Execu√ß√£o; 3: Bloqueado e 4: T√©rmino
+	ucontext_t 	context;	// contexto de execu√ß√£o da thread (SP, PC, GPRs e recursos) 
 } TCB_t; 
 
 typedef struct s_THREAD {
-	//Thread que est· esperando
-	THREAD_Gabi_motoquera *esperando;
+	//Thread a qual est√° sendo esperada por essa
+	THREAD_t *waitingJoin;
+	//Thread a qual ESPERA por essa
+	THREAT_t *waitedJoin;
 	//Semaforo usado
 	csem_t* semaforoUsado;
 	//Usa a TCB do Cechin
 	TCB_t threadCB;
-}THREAD_Gabi_motoquera;
+}THREAD_t;
 
 #endif

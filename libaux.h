@@ -1,3 +1,12 @@
+/*
+
+					Interface da Biblioteca auxiliar da GaVini <3   v1.0.0.0
+					Tem que revisar :)
+					Falta a função escalonar();!
+	
+*/
+
+
 //Pega a thread atual na lista de aptos 
 THREAD_t* current_thread();
 
