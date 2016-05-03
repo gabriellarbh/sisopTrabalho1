@@ -4,8 +4,12 @@
 					Tem que revisar :)
 	
 */
-
-//Pega a thread atual na lista de aptos 
+#include "libaux.h"
+//////////////////////////////////////////////////////////////////////////
+//
+//			Retorna a thread atual a partir do ID global
+//
+//////////////////////////////////////////////////////////////////////////
 THREAD_t* current_thread() {
 	THREAD_t* p;
 	if(!setIterator(lstApto, threadAtualID))
@@ -13,6 +17,11 @@ THREAD_t* current_thread() {
 	return NULL
 }	
 
+//////////////////////////////////////////////////////////////////////////
+//
+//			Dá block na thread atual (talvez seja necessário fazer o tratamento da lstBlock)
+//
+//////////////////////////////////////////////////////////////////////////
 void cBlock() {
 	//Pega a thread atual e seta seu estado para bloqueado.
 	THREAD_t *aux = current_thread();
@@ -20,8 +29,11 @@ void cBlock() {
 		aux->threadCB->state = PROCST_BLOQ;
 }
 
-
-
+//////////////////////////////////////////////////////////////////////////
+//
+//			Dá unblock em uma thread passada
+//
+//////////////////////////////////////////////////////////////////////////
 int cUnblock(THREAD_t *thread){
 	//Se a thrread nao existe ela retorna ERROR
 	if(thread == NULL)
@@ -37,8 +49,12 @@ int cUnblock(THREAD_t *thread){
 	}
 	return ERROR;
 }
+//////////////////////////////////////////////////////////////////////////
+//
+//			Seta o iterador da fila em um dado ID
+//
+//////////////////////////////////////////////////////////////////////////
 
-//Seta o iterador da fila em um dado ID
 int setIterator(PFILA2 fila, int id){
 	PNODE2 aux;
 
@@ -53,7 +69,11 @@ int setIterator(PFILA2 fila, int id){
 
 
 
-//Dada uma fila, retorna o tamanho da mesma
+//////////////////////////////////////////////////////////////////////////
+//
+//						Retorna o tamanho de uma fila
+//
+//////////////////////////////////////////////////////////////////////////
 int sizeFila(PFILA2 fila){
 
 	PNODE2 aux;
@@ -62,7 +82,13 @@ int sizeFila(PFILA2 fila){
 		retorno++;
 	return retorno;
 }
-//Termina a thread atual
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+//						Termina a thread atual
+//
+//////////////////////////////////////////////////////////////////////////
 void terminate_current_thread(){
 	//Pega a thread atual e seta seu estado para TERMINANDO
 	THREAD_t* thread = current_thread();
@@ -81,14 +107,22 @@ void terminate_current_thread(){
 	// Chama escalonador, e executa proxima thread. 
 	escalona();
 }
-//Seta o novo id da thread
+//////////////////////////////////////////////////////////////////////////
+//
+//			Seta o novo id da thread
+//
+//////////////////////////////////////////////////////////////////////////
 int get_new_id()
 {
-	int id = global_thread_id;
-	++global_thread_id;
+	int id = globalIDCount;
+	++globalIDCount;
 	return id;
 }
-
+//////////////////////////////////////////////////////////////////////////
+//
+//			Cria a main thread ????
+//
+//////////////////////////////////////////////////////////////////////////
 void create_main_thread(void* context)
 {
 	ucontext_t* main_context = (ucontext_t*) context;
@@ -97,7 +131,11 @@ void create_main_thread(void* context)
 	/* retorna para main */
 	return (void) setcontext(current_thread()->context);
 }
-
+//////////////////////////////////////////////////////////////////////////
+//
+//			Aloca uma nova thread ?????
+//
+//////////////////////////////////////////////////////////////////////////
 THREAD_t* allocate_thread()
 {
     ucontext_t current_context;
@@ -122,7 +160,11 @@ THREAD_t* allocate_thread()
     return allocator_buffer;
 }
 
-//Dá free em um contexto
+//////////////////////////////////////////////////////////////////////////
+//
+//			Dá free em um contexto
+//
+//////////////////////////////////////////////////////////////////////////
 void free_context(ucontext_t* context){
 	if (context != NULL){
 		free(context->uc_stack.ss_sp);
@@ -131,7 +173,11 @@ void free_context(ucontext_t* context){
 }
 
 
-//Aloca um novo contexto
+//////////////////////////////////////////////////////////////////////////
+//
+//			Alloca um novo contexto
+//
+//////////////////////////////////////////////////////////////////////////
 ucontext_t* allocate_context()
 {
 	ucontext_t* context = (ucontext_t*) malloc (sizeof(ucontext_t));
