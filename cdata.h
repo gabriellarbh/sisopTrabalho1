@@ -25,16 +25,12 @@ typedef struct s_TCB {
 } TCB_t; 
 
 typedef struct s_THREAD {
-	//id da thread que essa está esperando
-	int idEsperado;
-	//se usa recurso, não sei se vai ser mantida
-	int usaRecurso;
-	//ID da thread que está esperando
-	int esperadoPor;
+	//Thread que está esperando
+	THREAD_Gabi_motoquera *esperando;
 	//Semaforo usado
 	csem_t* semaforoUsado;
 	//Usa a TCB do Cechin
 	TCB_t threadCB;
-}THREAD_t;
+}THREAD_Gabi_motoquera;
 
 #endif

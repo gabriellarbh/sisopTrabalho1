@@ -5,16 +5,34 @@
 #define TRUE 1
 #define FALSE 0
 
+/*
+
+						Biblioteca de Threads da Gabi Motoquera e do André   v1.0.0.0
+						Inclui csem_init, cyield, cjoin, cwait, csignal.
+						Falta: ccreate (para adquirir esse pacote por favor ligue para 0800 1)
+	
+*/
+
 //para ver se a thread main já foi criada :)
 int mainInit;
 
-PFILA lstApto, lstBlock;
+//Filas de apto e block gerais
+PFILA2 lstApto, lstBlock;
 
-/*NÃO ESTÁ NEM PERTO DE ESTAR FINALIZADA, É SO PRA IR ENTENDENDO*/
+//Contexto que todas as threads vão quando terminam
+ucontext_t* terminateContext;
 
-ucontext_t *terminateContext, *allocatorContext;
+//Contexto no qual todas as threads são alocadas e desalocadas 
+ucontext_t allocatorContext;
 
-int threadAtualID;
+/* Variavél auxiliar para a função allocator_context. IDEIA DO VINI, NAO SEI SE EH NECESARIO*/
+THREAD_t* allocator_buffer;
+
+// O id que a nova thread criada receberá.
+int global_thread_id = 0;
+
+
+int threadAtualID = 0;
 
 
 //NÃO ESTÁ PRONTA-------------
@@ -24,6 +42,7 @@ int ccreate (void* (*start)(void*), void *arg) {
 		mainInit = TRUE;
 
 		terminateContext = allocate_context();
+		makecontext(terminateContext, terminate_current_thread, 0);
 
 	}
 }
@@ -33,9 +52,8 @@ int ccreate (void* (*start)(void*), void *arg) {
 
 int csem_init(csem_t *sem, int count) {
 	//ver se main existe, senao retorna erro
-	if (!mainInit) {
+	if (mainInit) {
 		sem->count = count;
-		//fazer malloc decentemente
 		CreateFila2(sem->fila);
 		return SUCCESS;
 	}
@@ -52,13 +70,13 @@ int cyield(void){
 	//Se o tamanho da lista de aptos é maior que um, reescalona, se tiver só uma thread
 	//ele continua a execução, pois ela seria a próxima a ser executada
 	if(sizeFila(lstApto) > 1)
-		retorno = escalonar();
+		retorno = escalona();
 
 	return retorno;
 }
 
 
-//PRONTA
+//Função a ser chamada
 int cwait(csem_t *sem) {
 	int retorno;
 	//Se não há semáforo ou a main não existe, retorna erro
@@ -69,7 +87,7 @@ int cwait(csem_t *sem) {
 		//Coloca a thread atual na lista de espera do semáforo
 		AppendFila2(sem->fila, current_thread());
 		cBlock();
-		retorno = reescalona();
+		retorno = escalona();
 	}
 	sem->count--;
 	current_thread()->semaforoUsado = sem;
@@ -81,49 +99,49 @@ int cwait(csem_t *sem) {
 
 int cjoin(int tid)
 {
-    if(!mainInit)
+	//Se a main não está iniciada e o id é inválido, retorna ERROR
+    if(!mainInit OR tid == IDNULL)
         return ERROR;
     //A variável abaixo indica se a thread a ser esperada já é esperada por outra thread
     int thread_join_free = FALSE;
-    THREAD_t* p;
-
-	if (tid != IDNULL && tid < global_thread_id) {
-		int thread_was_found = FALSE;
-		//Procura a thread a ser esperada na lista de Aptos
-		if(!setIterator(lstApto, tid)){
-			p = GetAtIterator2(lstApto);
-			//Se acha, vê se há uma thread já esperando ela
-			if(p->esperadoPor == IDNULL)
+    //A variável vai ser setada para true se existe uma thread com o ID pedido
+	int thread_was_found = FALSE;
+	THREAD_t* aux;
+	//Procura a thread a ser esperada na lista de Aptos
+	if(!setIterator(lstApto, tid)){
+		aux = GetAtIterator2(lstApto);
+		//Se acha, vê se há uma thread já esperando ela
+		if(aux->waitedJoin != NULL)
+			thread_join_free = TRUE;
+		//Seta o esperadoPor da thread com o id da thread atual
+		aux->waitedJoin = current_thread();
+		thread_was_found = TRUE;
+	}
+	//Mesmo procedimento para a lista de blocked	
+	if (!setIterator(lstBlock, tid)){
+		aux = GetAtIterator2(lstBlock);
+			if(aux->waitedJoin != NULL)
     			thread_join_free = TRUE;
-    		//Seta o esperadoPor da thread com o id da thread atual
-    		p->esperadoPor = current_thread()->threadCB->id;
+    		p->waitedJoin = current_thread();
 			thread_was_found = TRUE;
-		}
-		//Mesmo procedimento para a lista de blocked	
-		if (!setIterator(lstBlock, tid)){
-    		p = GetAtIterator2(lstBlock);
-    			if(p->esperadoPor == IDNULL)
-        			thread_join_free = TRUE;
-        		p->esperadoPor = current_thread()->threadCB->id;
-				thread_was_found = TRUE;
-		}
-		// Thread a ser esperada já terminou ou non ecsiste
-		if (!thread_was_found)
-			return ERROR;
+	}
+	// Thread a ser esperada já terminou ou non ecsiste
+	if (!thread_was_found)
+		return ERROR;
 
-		if (thread_join_free){
-		/* Thread encontrada e não está sendo esperada por outra, seta o idEsperado e move para fila de block*/
-			current_thread()->idEsperado = tid;
-			block_thread();
-			return escalonar();
-		}
+	if (thread_join_free){
+	/* Thread encontrada e não está sendo esperada por outra, seta o idEsperado e move para fila de block*/
+		current_thread()->waitingJoin = GetAtIterator2()
+		block_thread();
+		return escalonar();
 	}
 	//Caso id seja inválido ou haja outra thread esperando esta, retorna erro
 	return ERROR;
 }
 
-//PRONTA
+
 int csignal(csem_t *sem){
+	//Se a main não está iniciada ou o semáforo é NULL
 	if(!mainInit or sem = NULL)
 		return ERROR;
 	//Se há threads esperando por recurso
@@ -144,131 +162,3 @@ int csignal(csem_t *sem){
 	
 }
 
-
-
-THREAD_t* current_thread() {
-	THREAD_t* p;
-	if(!setIterator(lstApto, threadAtualID))
-		return (THREAD_t*) GetAtIterator2(lstApto);
-	return NULL;
-}	
-
-void cBlock() {
-	THREAD_t *aux = current_thread();
-	if(aux != NULL)
-		aux->threadCB->state = PROCST_BLOQ;
-}
-
-
-
-int cUnblock(THREAD_t *thread){
-	if(thread == NULL)
-		return CTHREAD_ERROR_CODE;
-	if(!setIterator(lstBlock, thread->threadCB->id)){
-		DeleteAtIteratorFila2(lstBlock);
-		AppendFila2(lstApto, (void*) thread);
-		thread->threadCB->state = CTHREAD_READY;
-		return SUCCESS;
-	}
-	return ERROR;
-}
-
-
-int setIterator(PFILA2 fila, int id){
-	PNODE2 aux;
-
-	for(aux = fila->first; aux != NULL; aux = aux->next){
-		if(aux->node->threadCB->id == id) {
-			fila->it = aux;
-			return SUCCESS;
-		}
-	}
-	return ERROR;
-}
-
-ucontext_t* allocate_context()
-{
-	ucontext_t* context = (ucontext_t*) malloc (sizeof(ucontext_t));
-
-	if (getcontext(context) != 0 || context == NULL)
-		return NULL;
-
-	/* aloca pilha */
-	context->uc_stack.ss_sp = (char*) malloc(MTHREADS_STACK_SIZE);
-	context->uc_stack.ss_size = MTHREADS_STACK_SIZE;
-
-	context->uc_link = NULL;
-
-	return context;
-}
-
-void free_context(ucontext_t* context)
-{
-	if (context != NULL)
-	{
-		free(context->uc_stack.ss_sp);
-		free(context);
-	}
-}
-
-
-int sizeFila(PFILA2 fila){
-	PNODE2 aux;
-	int retorno = 0;
-	for(aux = fila->first; aux != NULL; aux = aux->next)
-		retorno++;
-	return retorno;
-}
-
-void terminate_current_thread()
-{
-	THREAD_t* thread = current_thread();
-	thread->threadCB->state = PROCST_TERMINO;
-
-    /* se ainda existe um semáforo nessa thread */
-    if(thread->semaforoUsado != NULL)
-    {
-        csignal(thread->semaforoUsado); /* libera o recurso utilizado */
-    }
-
-	int idJoined = thread->esperadoPor;
-	THREAD_t *aux = NULL;
-
-	if (idJoined != IDNULL)
-	{
-		if(!setIterator(lstApto, idJoined)) 
-			aux = GetAtIterator2(lstApto);
-		
-		if(!setIterator(lstBlock, idJoined))
-			aux = GetAtIterator2(lstBlock);
-
-		aux->idEsperado = IDNULL;
-		/* Desbloqueia thread que estava esperando pelo fim da thread em execução. */
-		unblock_thread(aux);
-	}
-	/* Chama escalonador, e executa proxima thread. */
-	reschedule();
-}
-
-//NAO SEI SE E
-int terminateContext() {
-	THREAD_t *thread = threadAtual();
-	thread->thread->state = PROCST_TERMINO;
-
-	if(thread->isUsingRecurso) {
-		csignal(sem);
-	}
-
-}
-
-
-
-
-
-
-
-
-
-
-
-}
