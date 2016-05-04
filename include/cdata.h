@@ -4,6 +4,7 @@
  * Esse arquivo pode ser modificado. ENTRETANTO, deve ser utilizada a TCB fornecida.
  *
  */
+#include <ucontext.h>
 #ifndef __cdata__
 #define __cdata__
 
@@ -24,15 +25,16 @@ typedef struct s_TCB {
 	ucontext_t 	context;	// contexto de execução da thread (SP, PC, GPRs e recursos) 
 } TCB_t; 
 
+
 typedef struct s_THREAD {
 	//Thread a qual está sendo esperada por essa
-	THREAD_t *waitingJoin;
+	int waitingJoin;
 	//Thread a qual ESPERA por essa
-	THREAT_t *waitedJoin;
+	int waitedJoin;
 	//Semaforo usado
 	csem_t* semaforoUsado;
 	//Usa a TCB do Cechin
 	TCB_t threadCB;
-}THREAD_t;
+} THREAD_t;
 
 #endif

@@ -27,11 +27,13 @@ void cBlock() {
 	THREAD_t *aux = current_thread();
 	if(aux != NULL)
 		aux->threadCB->state = PROCST_BLOQ;
+	//a coloca na lista de bloqueados.
+	AppendFila2(lstBlock, (void *)aux);
 }
 
 //////////////////////////////////////////////////////////////////////////
 //
-//			Dá unblock em uma thread passada
+//		Dá unblock em uma thread passada
 //
 //////////////////////////////////////////////////////////////////////////
 int cUnblock(THREAD_t *thread){
@@ -51,7 +53,7 @@ int cUnblock(THREAD_t *thread){
 }
 //////////////////////////////////////////////////////////////////////////
 //
-//			Seta o iterador da fila em um dado ID
+//		Seta o iterador da fila em um dado ID
 //
 //////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +61,7 @@ int setIterator(PFILA2 fila, int id){
 	PNODE2 aux;
 
 	for(aux = fila->first; aux != NULL; aux = aux->next){
-		if(aux->node->threadCB->id == id) {
+		if(((THREAD_t *)aux->node)->threadCB->id == id) {
 			fila->it = aux;
 			return SUCCESS;
 		}
@@ -71,7 +73,7 @@ int setIterator(PFILA2 fila, int id){
 
 //////////////////////////////////////////////////////////////////////////
 //
-//						Retorna o tamanho de uma fila
+//		Retorna o tamanho de uma fila
 //
 //////////////////////////////////////////////////////////////////////////
 int sizeFila(PFILA2 fila){
@@ -86,7 +88,7 @@ int sizeFila(PFILA2 fila){
 
 //////////////////////////////////////////////////////////////////////////
 //
-//						Termina a thread atual
+//		Termina a thread atual
 //
 //////////////////////////////////////////////////////////////////////////
 void terminate_current_thread(){
@@ -162,7 +164,7 @@ THREAD_t* allocate_thread()
 
 //////////////////////////////////////////////////////////////////////////
 //
-//			Dá free em um contexto
+//		Dá free em um contexto
 //
 //////////////////////////////////////////////////////////////////////////
 void free_context(ucontext_t* context){
@@ -175,7 +177,7 @@ void free_context(ucontext_t* context){
 
 //////////////////////////////////////////////////////////////////////////
 //
-//			Alloca um novo contexto
+//		Alloca um novo contexto
 //
 //////////////////////////////////////////////////////////////////////////
 ucontext_t* allocate_context()
@@ -185,7 +187,7 @@ ucontext_t* allocate_context()
 	if (getcontext(context) != 0 || context == NULL)
 		return NULL;
 
-	//aloca a pilha do contexto
+	//aloca a pilha do contexto, NAO SEI COMOFAS ANDRÉ PLS
 	context->uc_stack.ss_sp = (char*) malloc(MTHREADS_STACK_SIZE);
 	context->uc_stack.ss_size = MTHREADS_STACK_SIZE;
 

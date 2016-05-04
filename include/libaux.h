@@ -6,9 +6,18 @@
 	
 */
 #include "cdata.h"
-#include "fila2.h"
-#include "cthread.h"
-#include "libaux.h"
+
+typedef struct s_THREAD {
+	//Thread a qual está sendo esperada por essa
+	int waitingJoin;
+	//Thread a qual ESPERA por essa
+	int waitedJoin;
+	//Semaforo usado
+	csem_t* semaforoUsado;
+	//Usa a TCB do Cechin
+	TCB_t threadCB;
+} THREAD_t;
+
 //Variáveis usadas em TODO O LUGAR, PQ VCS VALEM MT
 //para ver se a thread main já foi criada :)
 int mainInit;
