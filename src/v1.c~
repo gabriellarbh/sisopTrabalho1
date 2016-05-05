@@ -455,7 +455,7 @@ int escalona()
 	else if (thread->threadCB->state == PROCST_BLOQ)
 	{
 		/* Recalcula o tempo de execução e coloca na lista de bloqueados */
-		AppendFila2(lstBlock, (void *) thread);
+		AppendFila2(lstBLock, (void *) thread);
 
 		/* salva contexto. */
 		code |= getcontext(&(thread->threadCB->context));
@@ -463,7 +463,7 @@ int escalona()
 		/* Retoma aqui */
 	}
 	else if (thread->threadCB->state == PROCST_APTO)
-		AppendFila2(lstAptos, (void*) thread);
+		AppendFila2(lstAPtos, (void*) thread);
 
 	/* As threads retomam sua execução aqui, already_swapped_context == TRUE. */
 	if (!already_swapped_context)
@@ -482,7 +482,7 @@ int escalona()
 			exit(ERROR);
 		}
 
-		threadAtualID = first_thread->threadCB->tid;
+		thread_atual_id = first_thread->threadCB->tid;
 		first_thread->threadCB->state = PROCST_EXEC;
 
 		/* Troca contexto pra nova thread em execução */
@@ -520,10 +520,10 @@ void free_thread(THREAD_t* thread)
     if (!already_deallocated)
     {
         already_deallocated = TRUE;
-        allocatorContext.uc_link = &current_context;
+        allocator_context.uc_link = &current_context;
 
-        makecontext(&allocatorContext, (void(*)(void))free_thread_private, 0);
-        setcontext(&allocatorContext);
+        makecontext(&allocator_context, (void(*)(void))free_thread_private, 0);
+        setcontext(&allocator_context);
     }
 }
 

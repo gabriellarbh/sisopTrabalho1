@@ -24,6 +24,10 @@ ucontext_t allocatorContext;
 /* Variavél auxiliar para a função allocator_context. IDEIA DO VINI, NAO SEI SE EH NECESARIO*/
 THREAD_t* allocator_buffer;
 
+// O id que a nova thread criada receberá.
+int globalIDCount = 0;
+int threadAtualID = 0;
+
 
 //Pega a thread atual na lista de aptos 
 THREAD_t* current_thread();
@@ -63,8 +67,6 @@ void free_context(ucontext_t* context);
 
 //Aloca um novo contexto
 ucontext_t* allocate_context();
-//Executa próxima thread
-int executeNext();
 
 
 
