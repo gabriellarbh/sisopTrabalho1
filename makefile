@@ -6,10 +6,12 @@ v1.o: ./src/v1.c libaux.a
 	gcc -c -I./include -L./lib ./src/v1.c -laux -Wall -o ./bin/v1.o	
 libaux.a: libaux.o
 	ar crs ./lib/libaux.a ./bin/libaux.o
-libaux.o: ./src/libaux.c
-	gcc -c -I./include ./src/libaux.c -Wall -o ./bin/libaux.o
+libaux.o: ./src/libaux.c libfila.a
+	gcc -c -I./include -L./lib ./src/libaux.c -lfila -Wall -o ./bin/libaux.o
+libfila.a: ./bin/fila.o
+	ar crs ./lib/libfila.a ./bin/fila.o
 	
 cleanObject:
-	rm -f ./bin/*.o
+	rm -f ./bin/libaux.o ./bin/v1.o
 clean:
-	rm -f ./lib/libt2fs.a ./bin/*.o ./bin/cpy2t2 ./bin/mkdirt2 ./bin/dirt2 ./bin/rmdirt2
+	rm -f ./lib/libt2fs.a ./bin/*.o
