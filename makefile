@@ -6,7 +6,7 @@ v1.o: ./src/v1.c libaux.a
 	gcc -c -I./include -L./lib ./src/v1.c -laux -Wall -o ./bin/v1.o	
 libaux.a: libaux.o
 	ar crs ./lib/libaux.a ./bin/libaux.o
-libaux.o: ./src/libaux.c
+libaux.o: ./src/libaux.c libfila.a
 	gcc -c -I./include -L./lib ./src/libaux.c -lfila -Wall -o ./bin/libaux.o
 libfila.a: ./bin/fila.o
 	ar crs ./lib/libfila.a ./bin/fila.o
