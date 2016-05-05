@@ -5,6 +5,7 @@
  *
  */
 #include <ucontext.h>
+#include "cthread.h"
 #ifndef __cdata__
 #define __cdata__
 
@@ -17,6 +18,12 @@
 #define SUCCESS 0
 #define ERROR -1
 
+#define FALSE 0
+#define TRUE 1
+
+//tamanho da pilha para cada thread
+ #define CTHREADS_STACK_SIZE 16384
+
 /* NÃO ALTERAR ESSA struct */
 typedef struct s_TCB { 
 	int		tid; 		// identificador da thread
@@ -27,14 +34,16 @@ typedef struct s_TCB {
 
 
 typedef struct s_THREAD {
-	//Thread a qual está sendo esperada por essa
-	int waitingJoin;
 	//Thread a qual ESPERA por essa
-	int waitedJoin;
+	struct s_THREAD* waitedJoin;
 	//Semaforo usado
 	csem_t* semaforoUsado;
 	//Usa a TCB do Cechin
-	TCB_t threadCB;
+	TCB_t* threadCB;
+	//Contexto da thread
+	ucontext_t* context;
+	//Ponteiro para a pilha do contexto
+	char* stack;
 } THREAD_t;
 
 #endif

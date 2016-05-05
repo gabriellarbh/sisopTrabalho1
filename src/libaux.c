@@ -4,6 +4,11 @@
 					Tem que revisar :)
 	
 */
+#include <ucontext.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+#include <stdarg.h>
 #include "libaux.h"
 //////////////////////////////////////////////////////////////////////////
 //
@@ -11,10 +16,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 THREAD_t* current_thread() {
-	THREAD_t* p;
 	if(!setIterator(lstApto, threadAtualID))
-		return (THREAD_t*) GetAtIterator2(lstApto);
-	return NULL
+		return (THREAD_t*) GetAtIteratorFila2(lstApto);
+	return NULL;
 }	
 
 //////////////////////////////////////////////////////////////////////////
@@ -43,10 +47,10 @@ int cUnblock(THREAD_t *thread){
 	//Seta o iterador da lista de bloqueados na id, se achar
 	// e coloca a thread na lista de aptos
 	//por fim, troca o estado de bloqueado para READY
-	if(!setIterator(lstBlock, thread->threadCB->id)){
+	if(!setIterator(lstBlock, thread->threadCB->tid)){
 		DeleteAtIteratorFila2(lstBlock);
 		AppendFila2(lstApto, (void*) thread);
-		thread->threadCB->state = CTHREAD_READY;
+		thread->threadCB->state = PROCST_APTO;
 		return SUCCESS;
 	}
 	return ERROR;
@@ -61,7 +65,7 @@ int setIterator(PFILA2 fila, int id){
 	PNODE2 aux;
 
 	for(aux = fila->first; aux != NULL; aux = aux->next){
-		if(((THREAD_t *)aux->node)->threadCB->id == id) {
+		if(((THREAD_t *)aux->node)->threadCB->tid == id) {
 			fila->it = aux;
 			return SUCCESS;
 		}
@@ -105,7 +109,7 @@ void terminate_current_thread(){
 	THREAD_t* joined = thread->waitedJoin;
 	//Se há uma thread esperando por essa
 	if (joined != NULL)
-		unblock_thread(joined);
+		cUnblock(joined);
 	// Chama escalonador, e executa proxima thread. 
 	escalona();
 }
@@ -138,6 +142,25 @@ void create_main_thread(void* context)
 //			Aloca uma nova thread ?????
 //
 //////////////////////////////////////////////////////////////////////////
+void allocate_thread_make()
+{
+	/* aloca variavel e contexto. */
+    allocator_buffer = (THREAD_t*) malloc(sizeof(THREAD_t));
+    allocator_buffer->context = (ucontext_t*) malloc(sizeof(ucontext_t));
+
+	/* salva contexto */
+    getcontext(allocator_buffer->context);
+
+	/* Aloca pilha */
+    allocator_buffer->stack = (char*) malloc(CTHREADS_STACK_SIZE);
+
+	allocator_buffer->context->uc_stack.ss_sp = allocator_buffer->stack;
+	allocator_buffer->context->uc_stack.ss_size = CTHREADS_STACK_SIZE;
+
+	/* quando terminar vai para terminate_context */
+	allocator_buffer->context->uc_link = terminateContext;
+}
+
 THREAD_t* allocate_thread()
 {
     ucontext_t current_context;
@@ -151,12 +174,12 @@ THREAD_t* allocate_thread()
     if (!jaAlocada)
     {
 		jaAlocada = TRUE;
-        allocator_context.uc_link = &current_context;
+        allocatorContext.uc_link = &current_context;
 		/* seta que allocator_context começa na função allocate_thread_private */
-        makecontext(&allocator_context,
-			(void(*)(void))allocate_thread_private, 0);
+        makecontext(&allocatorContext,
+			(void(*)(void))allocate_thread_make, 0);
 
-        setcontext(&allocator_context);
+        setcontext(&allocatorContext);
     }
 
     return allocator_buffer;
@@ -188,8 +211,8 @@ ucontext_t* allocate_context()
 		return NULL;
 
 	//aloca a pilha do contexto, NAO SEI COMOFAS ANDRÉ PLS
-	context->uc_stack.ss_sp = (char*) malloc(MTHREADS_STACK_SIZE);
-	context->uc_stack.ss_size = MTHREADS_STACK_SIZE;
+	context->uc_stack.ss_sp = (char*) malloc(CTHREADS_STACK_SIZE);
+	context->uc_stack.ss_size = CTHREADS_STACK_SIZE;
 
 	context->uc_link = NULL;
 

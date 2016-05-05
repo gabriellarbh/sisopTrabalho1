@@ -5,18 +5,8 @@
 					Falta a função escalonar();!
 	
 */
+#include "fila2.h"
 #include "cdata.h"
-
-typedef struct s_THREAD {
-	//Thread a qual está sendo esperada por essa
-	int waitingJoin;
-	//Thread a qual ESPERA por essa
-	int waitedJoin;
-	//Semaforo usado
-	csem_t* semaforoUsado;
-	//Usa a TCB do Cechin
-	TCB_t threadCB;
-} THREAD_t;
 
 //Variáveis usadas em TODO O LUGAR, PQ VCS VALEM MT
 //para ver se a thread main já foi criada :)
@@ -65,6 +55,9 @@ int get_new_id();
 
 //Cria a thread main
 void create_main_thread(void* context);
+
+//Aloca parte especifica de uma thread
+void allocate_thread_make();
 
 //Aloca uma thread
 THREAD_t* allocate_thread();
