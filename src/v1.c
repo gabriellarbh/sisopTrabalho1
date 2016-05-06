@@ -83,7 +83,56 @@ ucontext_t* allocate_context();
 //NÃO ESTÁ PRONTA-------------
 
 int ccreate (void* (*start)(void*), void *arg){
-	return ERROR;
+    if(!mainInit)
+    {
+        /** inicializações */
+        mainInit = TRUE;
+
+        /* Cria terminate context */
+        terminateContext = allocate_context();
+        makecontext(terminateContext, terminate_current_thread, 0);
+
+        /* Cria allocator context */
+
+        if (getcontext(&allocatorContext) != 0)
+            return -1;
+        allocatorContext.uc_stack.ss_sp = (char*) malloc(CTHREADS_STACK_SIZE);
+        allocatorContext.uc_stack.ss_size = CTHREADS_STACK_SIZE;
+        allocatorContext.uc_link = NULL;
+
+        /* Cria main thread */
+        ucontext_t main_context;
+        int main_thread_created = FALSE;
+
+        if (getcontext(&main_context) != 0)
+            return ERROR;
+
+        int code = SUCCESS;
+        if (!main_thread_created)
+        {
+            main_thread_created = TRUE;
+            code |= ccreate((void*)&create_main_thread, (void*)&main_context);
+            escalona();
+        }
+    }
+
+    THREAD_t* thread = allocate_thread(); /* Aloca a nova thread */
+
+    thread->threadCB->tid = get_new_id(); /* Gera um id para a thread*/
+    thread->waitedJoin = NULL; /* não está sendo esperada por outra thread*/
+
+    thread->semaforoUsado = NULL;
+
+	/* Cria contexto da thread */
+	makecontext((&thread->threadCB->context),
+		(void (*) (void)) start, 1, arg);
+
+	/* Coloca a thread na lista de aptos, e o tempo de execução da thread é inicializado (recebe 0) */
+	AppendFila2(lstAptos, (void *) thread);
+	thread->threadCB->state = PROCST_CRIACAO;
+
+	/* Retorna o id da nova thread criada. */
+	return thread->threadCB->tid;
 }
 
 
